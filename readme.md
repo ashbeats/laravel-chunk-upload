@@ -1,3 +1,45 @@
+# Why this Fork? 
+
+The "master" branch saves chunks in sequence, where the order the chunks arrive matter. This is not good for my needs. I need to allow multiple parallel uploads. chunks will arrive out of sequence. 1,4,2,5,etc. 
+
+## These are the changes that need to be applied. 
+
+#### Primary
+* [ ] Save each part with it's part number and only merge on completion. 
+* [ ] Use my download acccelerator code for this. 
+
+#### Secondary
+* [ ] Send MD5_file of each chunk from client side. 
+   * [ ] Verify MD5 / per chunk. Send a retry-command if the chunk fails MD5 tests.
+   * [ ] Client lib needs to handle this msg and handle accordingly. 
+
+
+**Install via composer**
+
+```
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/ashbeats/laravel-chunk-upload"
+        }
+    ],
+    "require": {
+        "pionl/laravel-chunk-upload": "dev-resumablejs-mods"
+    }
+}
+```
+
+Note that you don't change the require statement except to specify your bugfix branch. You still reference the upstream package (pionl/laravel-chunk-upload), not this fork (ashbeats/laravel-chunk-upload). 
+
+```
+composer require pionl/laravel-chunk-upload:"dev-resumablejs-mods"
+```
+
+Memo by Ash (ashbeats)
+
+----
+
 # Laravel chunked upload
 Easy to use service for chunked upload with several js providers on top of Laravel's file upload.
 
