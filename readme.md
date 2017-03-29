@@ -36,6 +36,9 @@ Note that you don't change the require statement except to specify your bugfix b
 composer require pionl/laravel-chunk-upload:"dev-resumablejs-mods"
 ```
 
+To Link:
+`composer update pionl/laravel-chunk-upload --prefer-source`
+
 Memo by Ash (ashbeats)
 
 ----
