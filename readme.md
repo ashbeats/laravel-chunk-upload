@@ -25,7 +25,7 @@ The "master" branch saves chunks in sequence, where the order the chunks arrive 
         }
     ],
     "require": {
-        "pionl/laravel-chunk-upload": "dev-resumablejs-mods"
+        "pion/laravel-chunk-upload": "dev-resumablejs-mods"
     }
 }
 ```
@@ -33,11 +33,11 @@ The "master" branch saves chunks in sequence, where the order the chunks arrive 
 Note that you don't change the require statement except to specify your bugfix branch. You still reference the upstream package (pionl/laravel-chunk-upload), not this fork (ashbeats/laravel-chunk-upload). 
 
 ```
-composer require pionl/laravel-chunk-upload:"dev-resumablejs-mods"
+composer --require="pion/laravel-chunk-upload:dev-resumablejs-mods"
 ```
 
 To Link:
-`composer update pionl/laravel-chunk-upload --prefer-source`
+`composer update pion/laravel-chunk-upload --prefer-source`
 
 Memo by Ash (ashbeats)
 
