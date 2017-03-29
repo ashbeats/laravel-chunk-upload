@@ -10,6 +10,10 @@ use Pion\Laravel\ChunkUpload\Storage\ChunkStorage;
  */
 class ChunkFile
 {
+    
+    
+    dgdgdgd
+    
     /**
      * @var string
      */
