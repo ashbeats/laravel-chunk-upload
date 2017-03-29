@@ -12,7 +12,7 @@ class ChunkFile
 {
     
     
-    dgdgdgd
+    //dgdgdgd
     
     /**
      * @var string
