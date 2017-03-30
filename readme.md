@@ -2,18 +2,15 @@
 
 # Why this Fork? 
 
-The "master" branch saves chunks in sequence, where the order the chunks arrive matter. This is not good for my needs. I need to allow multiple parallel uploads. chunks will arrive out of sequence. 1,4,2,5,etc. 
+The "master" branch saves chunks in sequence, where the order the chunks arrive matter. But for my use-case, 
+I needed to allow multiple parallel uploads. This meant that chunks will arrive out of sequence. 1,4,2,5,etc.  
 
 ## These are the changes that need to be applied. 
 
 #### Primary (done)
 * [x] Save each part with it's part number and only merge on completion. 
 * [x] Use direct streams instead of fopen/fread loops.
-
-#### Secondary
-* [ ] Send MD5_file of each chunk from client side. 
-   * [ ] Verify MD5 / per chunk. Send a retry-command if the chunk fails MD5 tests.
-   * [ ] Client lib needs to handle this msg and handle accordingly. 
+* [x] Clean up chunks after merging. 
 
 
 **Install via composer**
@@ -41,6 +38,77 @@ composer --require="pion/laravel-chunk-upload:dev-resumablejs-mods"
 To Link:
 `composer update pion/laravel-chunk-upload --prefer-source`
 
+
+Example Usage: Add this method to your controller and modify as needed.
+
+```php
+
+    /**
+     * Handles the file upload
+     *
+     * @param Request $request
+     *
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws UploadMissingFileException
+     */
+    public function upload(Request $request)
+    {
+        
+        $receiver = new ParallelFileReceiver("file", $request, ParallelUploadHandler::class);
+        
+        // check if the upload is success
+        if ($receiver->isUploaded()) {
+            // receive the file
+            
+            $save = $receiver->receive();
+            
+            // check if the upload has finished (in chunk mode it will send smaller files)
+            if ($save->isFinished()) {
+                // save the file and return any response you need
+                $response = $this->saveFile($save->getFile());
+                
+                // clear the chunks/sections first.
+                if ($save instanceof ParallelChunkSave) {
+                    if ($response) {
+                        $save->clearRelatedChunks();
+                    }
+                }
+                
+                return $response;
+                
+                
+            } else {
+                // we are in chunk mode, lets send the current progress
+                /** @var AbstractHandler $handler */
+                $handler = $save->handler();
+                return response()->json([
+                    "done" => $handler->getPercentageDone(),
+                ]);
+            }
+        } else {
+            throw new UploadMissingFileException();
+        }
+    }
+    
+```
+
+
+If you're using Resumable JS the follwing config options now  work seamlessly. Even 
+if the chunks are sent in a different order, the file will still be merged 
+correctly. 
+
+```javascript
+  var r = new Resumable( {
+                    chunkSize : 1 * 1024 * chunkSize,
+                    simultaneousUploads : 8,
+                    testChunks : false,
+                    prioritizeFirstAndLastChunk: true,
+                    maxFileSize: (500*1000*1000),
+                    fileType: ['mp4', 'mkv', 'webm'],
+                } );
+                
+```
 Memo by Ash (ashbeats)
 
 ----
