@@ -1,3 +1,7 @@
+
+# ****** DO NOT USE THIS FORK - It's an experiment and is highly unstable at the moment. ******
+
+
 # Why this Fork? 
 
 The "master" branch saves chunks in sequence, where the order the chunks arrive matter. This is not good for my needs. I need to allow multiple parallel uploads. chunks will arrive out of sequence. 1,4,2,5,etc. 
@@ -5,8 +9,8 @@ The "master" branch saves chunks in sequence, where the order the chunks arrive 
 ## These are the changes that need to be applied. 
 
 #### Primary
-* [ ] Save each part with it's part number and only merge on completion. 
-* [ ] Use my download acccelerator code for this. 
+* [x] Save each part with it's part number and only merge on completion. 
+* [x] Use my download acccelerator code for this. 
 
 #### Secondary
 * [ ] Send MD5_file of each chunk from client side. 

@@ -1,6 +1,10 @@
 <?php
 namespace Pion\Laravel\ChunkUpload\Receiver;
 
+
+use Storage;
+use File;
+
 use Illuminate\Http\Request;
 use Pion\Laravel\ChunkUpload\Config\AbstractConfig;
 use Pion\Laravel\ChunkUpload\Handler\AbstractHandler;

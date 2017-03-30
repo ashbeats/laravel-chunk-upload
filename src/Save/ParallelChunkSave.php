@@ -1,11 +1,14 @@
 <?php
 namespace Pion\Laravel\ChunkUpload\Save;
 
+
+use Storage;
 use File;
+
 use Illuminate\Http\UploadedFile;
 use Pion\Laravel\ChunkUpload\Config\AbstractConfig;
 use Pion\Laravel\ChunkUpload\Exceptions\ChunkSaveException;
-use Pion\Laravel\ChunkUpload\Handler\ResumablejsParallelUploadHandler;
+use Pion\Laravel\ChunkUpload\Handler\ParallelUploadHandler;
 use Pion\Laravel\ChunkUpload\Storage\ChunkStorage;
 
 class ParallelChunkSave extends AbstractSave
@@ -48,19 +51,16 @@ class ParallelChunkSave extends AbstractSave
      * AbstractUpload constructor.
      *
      * @param UploadedFile $file the uploaded file (chunk file)
-     * @param ResumablejsParallelUploadHandler $handler the handler that detected the correct save method
+     * @param ParallelUploadHandler $handler the handler that detected the correct save method
      * @param ChunkStorage $chunkStorage the chunk storage
      * @param AbstractConfig $config the config manager
      */
-    public function __construct(UploadedFile $file, ResumablejsParallelUploadHandler $handler, $chunkStorage, $config)
+    public function __construct(UploadedFile $file, ParallelUploadHandler $handler, $chunkStorage, $config)
     {
         parent::__construct($file, $handler, $config);
         $this->chunkStorage = $chunkStorage;
         
-        
-        $this->isLastChunk = false;
-        //$this->isLastChunk = $handler->haveAllChunksArrived();
-        //$this->isLastChunk = $handler->countChucksReceived();
+        $this->isLastChunk = false; #not relying on this. Instead use handler()->haveAllChunksArrived() to get a up-to-the-minute status.
         
         $this->chunkFileName = $handler->getChunkFileName();
         
@@ -153,22 +153,13 @@ class ParallelChunkSave extends AbstractSave
         $this->createChunksFolderIfNeeded();
         $file = $this->getChunkFilePath();
         
-        // delete the old chunk
-        /* if ($this->handler()->isFirstChunk() && $this->chunkDisk()->exists($file)) {
-             $this->chunkDisk()->delete($file);
-         }*/
         $this->saveCurrentChunkFile();
-        //$this->saveCurrentChunkFile();
         
         // build the last file because of the last chunk
         if ($this->handler()->haveAllChunksArrived()) {
-            //dump("handleChunkMerge", $this->handler()->getAllSections());
-            //$this->buildFullFileFromChunks();
-            
             $this->mergeAllChunks();
-        } else {
-            
         }
+        
     }
     
     function mergeAllChunks()
@@ -176,14 +167,11 @@ class ParallelChunkSave extends AbstractSave
         
         $sections = $this->handler()->getAllSections();
         
-        # C:\xampp-root-4\cinemagraph\storage\app\chunks/
+        # C:\xampp-root-4\storage\app\chunks/
         $chunkFolderAbsolute = ($this->getChunkDirectory(true));
         
         # chunks/
         $chunkFolderName = $this->getChunkDirectory();
-        
-        
-        // $this->getChunkDirectory($absolutePath) . $this->chunkFileName;
         
         # make a reasonable name. ( can-stock-photo_csp23570125.webm-cea02e91a6755040b9377c50b50380e0 )
         $unique_file_prefix = $this->handler()->extractUniqueFilePrefix($this->chunkFileName);
@@ -197,7 +185,7 @@ class ParallelChunkSave extends AbstractSave
         
         $finalPath = realpath($finalPath);
         
-        // todo - SORT!!!
+        /** Sort chunks in order */
         $sections = (collect($sections))->sort(function ($left, $right) {
             $sectionIndexLeft = $this->handler()->extractSectionIndex($left);
             $sectionIndexRight = $this->handler()->extractSectionIndex($right);
@@ -209,12 +197,8 @@ class ParallelChunkSave extends AbstractSave
             return ($sectionIndexLeft < $sectionIndexRight) ? -1 : 1;
         });
         
-        //dd('sorted', $sections->toArray());
-        //dump("finalPath - $finalPath >> ");
         
         foreach ($sections->toArray() as $index => $section) {
-            
-            # chunks/can-stock-photo_csp23570125.webm-cea02e91a6755040b9377c50b50380e0--section-1.part
             
             # subtract chunks/ from the end of C:\xampp-root-4\storage\app\chunks/
             $sectionFilename = preg_replace('/^' . preg_quote($chunkFolderName, '/') . '/im', '', $section);;
@@ -224,23 +208,11 @@ class ParallelChunkSave extends AbstractSave
                 throw new ChunkSaveException('Merging failed.', 802);
             }
             
-            //dump("$actual_section_file_path >> ");
-            
             // use direct streams to keep memory usage low instaed of fopen/fread
             file_put_contents($finalPath, file_get_contents($actual_section_file_path), FILE_APPEND);
             
-            // todo -delete.
-            //File::delete($actual_section_file_path);
-            
         }
         
-        
-        //dump('getClientOriginalName ????', $this->file->getClientOriginalName(), mime_content_type($finalPath));
-        
-        // try to get local path
-        
-        
-        // build the new UploadedFile
         // build the new UploadedFile
         $this->fullChunkFile = new UploadedFile(
             $finalPath,
@@ -251,10 +223,6 @@ class ParallelChunkSave extends AbstractSave
         );
         
         
-        // file_put_contents( $tmp_folder . basename( $file  ), file_get_contents( $filename ), FILE_APPEND );
-        
-        
-        //dump(['mergeAllChunks', $unique_file_prefix, $chunkFolderAbsolute, $sections, $this->chunkDisk()]);
     }
     
     /***
@@ -264,24 +232,24 @@ class ParallelChunkSave extends AbstractSave
      */
     public function clearRelatedChunks()
     {
-       /*
-            Call this function from the UploadsController.
+        /****
+         * Call this function from the UploadsController.
+         * Example:
+         * ` if ($save->isFinished()) {
+         * // save the file and return any response you need
+         * $response = $this->saveFile($save->getFile());
+         *
+         * // clear the chunks/sections first.
+         *
+         * if($response){
+         * $save->clearRelatedChunks(); <------
+         * }
+         *
+         * return $response; <-- then send back response.`
+         *
+         *
+         * }*/
         
-         if ($save->isFinished()) {
-            // save the file and return any response you need
-            $response = $this->saveFile($save->getFile());
-        
-            // clear the chunks/sections first.
-        
-            if($response){
-                $save->clearRelatedChunks(); <------
-            }
-        
-            return $response; <-- then send back response.
-        
-        
-        }*/
-    
         $sections = $this->handler()->getAllSections();
         
         $chunkFolderAbsolute = realpath($this->getChunkDirectory(true));
@@ -290,11 +258,10 @@ class ParallelChunkSave extends AbstractSave
         $finalPath = $chunkFolderAbsolute . "/" . $unique_file_prefix . "--section-*";
         
         
-        foreach( File::glob($finalPath ) as $spentSection){
+        foreach (File::glob($finalPath) as $spentSection) {
             @File::delete($spentSection);
         }
         
-       
         
     }
     
@@ -305,19 +272,8 @@ class ParallelChunkSave extends AbstractSave
      */
     protected function saveCurrentChunkFile()
     {
-        // @todo: rebuild to use updateStream and etc to try to enable cloud
-        // $driver = $this->chunkStorage()->driver();
-        /*dd([
-            '$this->getChunkFullFilePath()' => $this->getChunkFullFilePath(),
-            '$this->file->getPathname()' => $this->file->getPathname(),
-        ]);*/
-        
-        
         $temp_source = $this->file->getPathname(); // sys temp file
         $destination = $this->getChunkFullFilePath(); // our custom part filename.
-        //dump($temp_source);
-        
-        //dd($this->getChunkDirectory(true), $this->chunkFileName);
         
         try {
             $this->file->move(realpath($this->getChunkDirectory(true)), $this->chunkFileName);
@@ -325,63 +281,8 @@ class ParallelChunkSave extends AbstractSave
             throw new ChunkSaveException($e->getMessage() ?? 'Move failed.', 801);
         }
         
-        // use direct streams instead of fread/fopen/fwrite to keep memory usage low.
-        
-        
     }
     
-    
-    function merge_files($file, $tmp_folder)
-    {
-        
-        if (preg_match('%/$%im', $tmp_folder) == false) {
-            $tmp_folder = $tmp_folder . "/";
-        }
-        
-        
-        $content = '';
-        $items = glob($tmp_folder . basename($file) . '.*');
-        
-        $sort_asc_filenames = function ($filename_a, $filename_b) {
-            
-            $a = intval(preg_replace('/^.*\.([\d]+)$/im', '\1', $filename_a));
-            $b = intval(preg_replace('/^.*\.([\d]+)$/im', '\1', $filename_b));
-            
-            if ($a == $b) {
-                echo "a ($a) is same priority as b ($b), keeping the same\n";
-                return 0;
-            } else if ($a > $b) {
-                echo "a ($a) is higher priority than b ($b), moving b down array\n";
-                return 1;
-            } else {
-                echo "b ($b) is higher priority than a ($a), moving b up array\n";
-                return -1;
-            }
-        };
-        
-        usort($items, $sort_asc_filenames);
-        
-        
-        dd($sort_asc_filenames);
-        
-        /*    foreach ( $items as $key => $value ) {
-                echo "$key: $value\n";
-            }*/
-        
-        
-        foreach ($items as $filename) {
-            // use direct streams to keep memory usage low.
-            file_put_contents($tmp_folder . basename($file), file_get_contents($filename), FILE_APPEND);
-        }
-        
-        // CLean up
-        foreach ($items as $filename) {
-            // unlink( $filename );
-            // remove folder as well.
-        }
-        
-        return 'OK';
-    }
     
     
     /**
@@ -389,18 +290,7 @@ class ParallelChunkSave extends AbstractSave
      */
     protected function buildFullFileFromChunks()
     {
-        // try to get local path
-        $finalPath = $this->getChunkFullFilePath();
-        
-        // build the new UploadedFile
-        $this->fullChunkFile = new UploadedFile(
-            $finalPath,
-            $this->file->getClientOriginalName(),
-            $this->file->getClientMimeType(),
-            filesize($finalPath), $this->file->getError(),
-            true // we must pass the true as test to force the upload file
-        // to use a standard copy method, not move uploaded file
-        );
+       // ...
     }
     
     /**
@@ -410,28 +300,7 @@ class ParallelChunkSave extends AbstractSave
      */
     protected function appendDataToChunkFile()
     {
-        // @todo: rebuild to use updateStream and etc to try to enable cloud
-        // $driver = $this->chunkStorage()->driver();
-        
-        // open the target file
-        if (!$out = @fopen($this->getChunkFullFilePath(), 'ab')) {
-            throw new ChunkSaveException('Failed to open output stream.', 102);
-        }
-        
-        // open the new uploaded chunk
-        if (!$in = @fopen($this->file->getPathname(), 'rb')) {
-            @fclose($out);
-            throw new ChunkSaveException('Failed to open input stream', 101);
-        }
-        
-        // read and write in buffs
-        while ($buff = fread($in, 4096)) {
-            fwrite($out, $buff);
-        }
-        
-        // close the readers
-        @fclose($out);
-        @fclose($in);
+      //...
     }
     
     /**
