@@ -8,7 +8,7 @@ The "master" branch saves chunks in sequence, where the order the chunks arrive 
 
 #### Primary (done)
 * [x] Save each part with it's part number and only merge on completion. 
-* [x] Use my download acccelerator code for this. 
+* [x] Use direct streams instead of fopen/fread loops.
 
 #### Secondary
 * [ ] Send MD5_file of each chunk from client side. 
