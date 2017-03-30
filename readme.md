@@ -1,6 +1,4 @@
 
-# ****** DO NOT USE THIS FORK - It's an experiment and is highly unstable at the moment. ******
-
 
 # Why this Fork? 
 
@@ -8,7 +6,7 @@ The "master" branch saves chunks in sequence, where the order the chunks arrive 
 
 ## These are the changes that need to be applied. 
 
-#### Primary
+#### Primary (done)
 * [x] Save each part with it's part number and only merge on completion. 
 * [x] Use my download acccelerator code for this. 
 
