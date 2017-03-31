@@ -18,8 +18,8 @@ use Pion\Laravel\ChunkUpload\Storage\ChunkStorage;
 /***
  * Class ParallelFileReceiver
  *
- * @package Pion\Laravel\ChunkUpload\Receiver
- * @author Ash
+ * @package Pion\Laravel\ChunkUpload\ParallelFileReceiver
+ *
  */
 class ParallelFileReceiver extends FileReceiver
 {
