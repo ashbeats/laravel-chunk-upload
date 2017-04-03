@@ -36,7 +36,7 @@ class ParallelFileReceiver extends FileReceiver
     /**
      * The handler that detects what upload proccess is beeing used
      *
-     * @var AbstractHandler
+     * @var ParallelFileReceiver|AbstractHandler
      */
     protected $handler = null;
 
@@ -72,7 +72,7 @@ class ParallelFileReceiver extends FileReceiver
         $this->config = is_null($config) ? AbstractConfig::config() : $config;
 
         if ($this->isUploaded()) {
-            $this->handler = new $handlerClass($this->request, $this->file, $this->config);
+            $this->handler = new \Pion\Laravel\ChunkUpload\Handler\ParallelUploadHandler($this->request, $this->file, $this->config);
         }
     }
 

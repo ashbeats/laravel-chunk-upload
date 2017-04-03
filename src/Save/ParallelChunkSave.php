@@ -58,12 +58,14 @@ class ParallelChunkSave extends AbstractSave
     public function __construct(UploadedFile $file, ParallelUploadHandler $handler, $chunkStorage, $config)
     {
         parent::__construct($file, $handler, $config);
+
+
         $this->chunkStorage = $chunkStorage;
         
         $this->isLastChunk = false; #not relying on this. Instead use handler()->haveAllChunksArrived() to get a up-to-the-minute status.
         
         $this->chunkFileName = $handler->getChunkFileName();
-        
+
         // build the full disk path
         $this->chunkFullFilePath = $this->getChunkFilePath(true);
         
@@ -156,9 +158,9 @@ class ParallelChunkSave extends AbstractSave
         $this->saveCurrentChunkFile();
         
         // build the last file because of the last chunk
-        if ($this->handler()->haveAllChunksArrived()) {
+       /* if ($this->handler()->haveAllChunksArrived()) {
             $this->mergeAllChunks();
-        }
+        }*/
         
     }
     
