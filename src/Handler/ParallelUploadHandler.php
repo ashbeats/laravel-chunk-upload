@@ -75,6 +75,7 @@ class ParallelUploadHandler extends ResumableJSUploadHandler //ChunksInRequestUp
     {
         $unique_file_prefix = $this->extractUniqueFilePrefix($this->getChunkFileName());
         $x = new ChunkStorage(Storage::disk($this->config->chunksDiskName()), $this->config);
+
         $matches = preg_grep('/' . preg_quote($unique_file_prefix) . '--section-([\d]+)\.part/im', $x->files());
         
         return $matches;
