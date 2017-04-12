@@ -91,7 +91,7 @@ class ParallelUploadHandler extends ResumableJSUploadHandler //ChunksInRequestUp
      */
     public function getChunkFileName()
     {
-        return $this->createChunkFileName("-section-{$this->currentChunk}");
+        return $this->createChunkFileName("" . "-section-{$this->currentChunk}");
     }
     
     

@@ -283,7 +283,13 @@ class ParallelChunkSave extends AbstractSave
         $destination = $this->getChunkFullFilePath(); // our custom part filename.
 
         try {
-            $this->file->move(realpath($this->getChunkDirectory(true)), $this->chunkFileName);
+
+            $destination_dir = realpath($this->getChunkDirectory(true));
+            if(file_exists($destination_dir . "/" . $this->chunkFileName)){
+                File::delete($destination_dir. "/" . $this->chunkFileName);
+            }
+
+            $this->file->move($destination_dir, $this->chunkFileName);
         } catch (\Exception $e) {
             throw new ChunkSaveException($e->getMessage() ?? 'Move failed.', 801);
         }
